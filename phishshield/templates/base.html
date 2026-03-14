@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> PHISHSHIELD // Security Engine</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="PhishShield Logo" class="logo-img" title="PHISHSHIELD">
+                <div class="logo-name">PhishShield</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="{{ url_for('main.dashboard') }}"
+                        class="nav-link {{ 'active' if request.endpoint == 'main.dashboard' }}">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('main.scan') }}"
+                        class="nav-link {{ 'active' if request.endpoint == 'main.scan' }}">
+                        <i class="fas fa-shield-virus"></i> Threat Scan
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ url_for('main.history') }}"
+                        class="nav-link {{ 'active' if request.endpoint == 'main.history' }}">
+                        <i class="fas fa-history"></i> Log History
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
+                <h1 style="font-size: 1.5rem; color: var(--text-dim);">SYSTEM INTAKE: <span style="color: white">{%
+                        block title %}{% endblock %}</span></h1>
+                <div
+                    style="background: var(--bg-card); padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem; border: 1px solid var(--glass-border);">
+                    <i class="fas fa-signal" style="color: var(--success); margin-right: 5px;"></i>
+                    SECURE CONNECTION ACTIVE
+                </div>
+            </header>
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <div id="notification-container" style="position: fixed; top: 2rem; right: 2rem; z-index: 9999; pointer-events: none;"></div>
+
+    <script>
+        function showNotification(title, message, type = 'success') {
+            const container = document.getElementById('notification-container');
+            const alert = document.createElement('div');
+            alert.className = `cyber-alert alert-${type}`;
+            alert.style.cssText = `
+                pointer-events: all;
+                background: rgba(10, 11, 30, 0.9);
+                backdrop-filter: blur(15px);
+                border: 1px solid var(--${type === 'success' ? 'success' : 'danger'});
+                box-shadow: 0 0 20px rgba(${type === 'success' ? '0, 255, 170' : '255, 71, 87'}, 0.2);
+                padding: 1.2rem;
+                margin-bottom: 1rem;
+                border-radius: 8px;
+                width: 320px;
+                transform: translateX(120%);
+                transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                position: relative;
+                overflow: hidden;
+                border-left: 4px solid var(--${type === 'success' ? 'success' : 'danger'});
+            `;
+
+            alert.innerHTML = `
+                <div style="display: flex; gap: 1rem; align-items: start;">
+                    <i class="fas ${type === 'success' ? 'fa-check-shield' : 'fa-biohazard'}" style="color: var(--${type === 'success' ? 'success' : 'danger'}); font-size: 1.2rem; margin-top: 0.2rem;"></i>
+                    <div>
+                        <div style="font-weight: 800; color: white; margin-bottom: 0.3rem; letter-spacing: 1px; font-size: 0.9rem;">${title}</div>
+                        <div style="color: var(--text-dim); font-size: 0.8rem; line-height: 1.4;">${message}</div>
+                    </div>
+                </div>
+                <div style="position: absolute; bottom: 0; left: 0; height: 3px; width: 100%; background: var(--${type === 'success' ? 'success' : 'danger'}); animation: alert-progress 5s linear forwards;"></div>
+            `;
+
+            container.appendChild(alert);
+
+            // Animate in
+            requestAnimationFrame(() => {
+                alert.style.transform = 'translateX(0)';
+            });
+
+            // Remove after 5s
+            setTimeout(() => {
+                alert.style.transform = 'translateX(120%)';
+                setTimeout(() => alert.remove(), 500);
+            }, 5000);
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

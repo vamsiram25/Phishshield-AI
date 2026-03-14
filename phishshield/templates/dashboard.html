@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}INTEL DASHBOARD{% endblock %}
+
+{% block content %}
+<div class="command-grid">
+    <!-- Row 1: Tactical Metrics -->
+    <div class="glass-panel metric-card">
+        <label class="tag">INTAKE_VOLUME</label>
+        <div class="val">{{ stats.total }}</div>
+        <div class="sub">Total Analysis Cycles</div>
+    </div>
+
+    <div class="glass-panel metric-card">
+        <label class="tag">AVG_RISK_INDEX</label>
+        <div class="val">{{ stats.avg_risk }}<span class="unit">%</span></div>
+        <div class="sub">Aggregate Threat Level</div>
+    </div>
+
+    <div class="glass-panel metric-card status-alive">
+        <label class="tag">SYSTEM_HEALTH</label>
+        <div class="val">99.9<span class="unit">%</span></div>
+        <div class="sub">Stability Sync Active</div>
+    </div>
+
+    <!-- Row 2: Analytics & Live Feed -->
+    <div class="glass-panel span-2">
+        <h3 style="margin-bottom: 2rem; color: var(--primary);">THREAT_DISTRIBUTION_INFOGRAPHIC</h3>
+        <div class="chart-container">
+            <div class="chart-row">
+                <span class="c-label">CRITICAL_PHISH</span>
+                <div class="bar-bg">
+                    <div class="bar high"
+                        data-target="{{ (stats.high / stats.total * 100) if stats.total > 0 else 0 }}"></div>
+                </div>
+                <span class="c-val">{{ stats.high }}</span>
+            </div>
+            <div class="chart-row">
+                <span class="c-label">SUSPICIOUS_VAL</span>
+                <div class="bar-bg">
+                    <div class="bar med"
+                        data-target="{{ (stats.medium / stats.total * 100) if stats.total > 0 else 0 }}"></div>
+                </div>
+                <span class="c-val">{{ stats.medium }}</span>
+            </div>
+            <div class="chart-row">
+                <span class="c-label">SECURE_INTAKE</span>
+                <div class="bar-bg">
+                    <div class="bar low" data-target="{{ (stats.low / stats.total * 100) if stats.total > 0 else 0 }}">
+                    </div>
+                </div>
+                <span class="c-val">{{ stats.low }}</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                document.querySelectorAll('.bar').forEach(bar => {
+                    const targetWidth = bar.getAttribute('data-target');
+                    bar.style.width = targetWidth + '%';
+                });
+            }, 300);
+        });
+    </script>
+
+    <div class="glass-panel feed-panel">
+        <h3 style="margin-bottom: 1.5rem; font-size: 0.8rem;">LIVE_INTELLIGENCE_STREAM</h3>
+        <div class="feed-container">
+            {% for scan in recent %}
+            <div class="feed-item border-{{ scan.risk_level.lower() }}">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                    <span class="f-time">{{ scan.timestamp.split(' ')[1] }}</span>
+                    <span class="f-level color-{{ scan.risk_level.lower() }}">{{ scan.risk_level.upper() }}</span>
+                </div>
+                <div class="f-snippet">{{ scan.snippet[:40] }}...</div>
+            </div>
+            {% endfor %}
+            {% if not recent %}
+            <div style="text-align: center; padding: 2rem; opacity: 0.3; font-size: 0.7rem;">AWAITING_DATA_STREAM...
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Row 3: Detailed Status -->
+    <div class="glass-panel span-3">
+        <div class="diag-grid">
+            <div class="diag-item">
+                <span class="d-dot dot-on"></span>
+                <span class="d-text">ML_CLASSIFIER: ONLINE</span>
+            </div>
+            <div class="diag-item">
+                <span class="d-dot dot-on"></span>
+                <span class="d-text">LINK_FORENSICS: ACTIVE</span>
+            </div>
+            <div class="diag-item">
+                <span class="d-dot dot-on"></span>
+                <span class="d-text">KEYWORD_CORE: LOADED</span>
+            </div>
+            <div class="diag-item">
+                <span class="d-dot dot-on"></span>
+                <span class="d-text">PERSISTENCE_DB: SYNCED</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

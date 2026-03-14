@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}THREAT SCANNER{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="max-width: 900px; margin: 0 auto;">
+    <p style="color: var(--text-dim); margin-bottom: 2rem; font-size: 0.9rem;">Input raw email content and optional
+        attachments for multi-vector analysis.</p>
+
+    <form id="scanForm" enctype="multipart/form-data">
+        <label class="stat-label">Email Content / Headers</label>
+        <textarea name="email_text" id="emailText" class="cyber-textarea" rows="8"
+            placeholder="Paste email source here..."></textarea>
+
+        <label class="stat-label">Vector Enrichment (Attachment)</label>
+        <div class="upload-container" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-cloud-upload-alt fa-2x"
+                style="color: var(--primary); margin-bottom: 1rem; display: block;"></i>
+            <span id="fileNameDisplay">Drag & drop or <span style="color: var(--primary);">browse</span></span>
+            <input type="file" id="fileInput" name="attachment" style="display: none;" onchange="updateFileName()">
+        </div>
+
+        <div style="text-align: center;">
+            <button type="submit" class="btn-cyber" id="scanBtn">
+                <i class="fas fa-bolt"></i> INITIATE_SCAN
+            </button>
+        </div>
+    </form>
+
+    <div id="resultsArea"
+        style="display: none; margin-top: 3rem; border-top: 1px solid var(--glass-border); padding-top: 2rem;">
+
+        <!-- Tactical Summary Section -->
+        <div id="summarySection"
+            style="margin-bottom: 2rem; background: rgba(0, 243, 255, 0.05); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--primary);">
+            <h4 style="color: var(--primary); margin-bottom: 0.8rem;"><i class="fas fa-microchip"></i>
+                TACTICAL_ANALYSIS_SUMMARY</h4>
+            <div id="analysisSummary" style="font-size: 0.9rem; line-height: 1.6; color: white;">
+                Awaiting intelligence synthesis...
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3>SCAN_VERDICT</h3>
+            <span id="riskLabel" class="risk-low" style="font-weight: 800; font-size: 1.2rem;">CALCULATING...</span>
+        </div>
+
+        <div class="risk-meter-container">
+            <div id="riskBar" class="risk-bar" style="width: 0%;"></div>
+        </div>
+        <div
+            style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2rem;">
+            <span>0% (SAFE)</span>
+            <span id="riskScore">0%</span>
+            <span>100% (MALICIOUS)</span>
+        </div>
+
+        <div id="threatDetails" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <!-- Links -->
+            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                <h4 style="color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-link"></i> LINKS_DETECTED</h4>
+                <div id="linksList" style="font-size: 0.8rem; color: var(--text-dim);">Scanning links...</div>
+            </div>
+            <!-- Attachment -->
+            <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+                <h4 style="color: var(--primary); margin-bottom: 1rem;"><i class="fas fa-paperclip"></i>
+                    ATTACHMENT_STATUS</h4>
+                <div id="attachmentStatus" style="font-size: 0.8rem; color: var(--text-dim);">No file provided</div>
+            </div>
+        </div>
+
+        <!-- Indicators Panel -->
+        <div id="indicatorsSection"
+            style="margin-top: 1.5rem; background: rgba(0,0,0,0.2); padding: 1.5rem; border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h4 style="color: var(--primary); margin: 0;"><i class="fas fa-search"></i> DETECTED_PHISH_INDICATORS
+                </h4>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <div
+                        style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; color: var(--text-main);">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #ff4757;"></span> HIGH
+                    </div>
+                    <div
+                        style="display: flex; align-items: center; gap: 0.3rem; font-size: 0.7rem; color: var(--text-main);">
+                        <span style="width: 8px; height: 8px; border-radius: 50%; background: #ffcc00;"></span> MEDIUM
+                    </div>
+                </div>
+            </div>
+            <div id="indicatorsList">
+                <p style="color: var(--text-dim); font-size: 0.8rem;">Run a scan to analyze text vulnerabilities.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let scanData = null;
+
+    function updateFileName() {
+        const input = document.getElementById('fileInput');
+        const display = document.getElementById('fileNameDisplay');
+        display.textContent = input.files[0] ? input.files[0].name : 'Drag & drop or browse';
+    }
+
+    document.getElementById('scanForm').onsubmit = async function (e) {
+        e.preventDefault();
+        const btn = document.getElementById('scanBtn');
+        const resultsArea = document.getElementById('resultsArea');
+        const summaryEl = document.getElementById('analysisSummary');
+        const formData = new FormData(this);
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ANALYZING_VECTORS...';
+
+        try {
+            const response = await fetch('/scan', { method: 'POST', body: formData });
+            if (!response.ok) throw new Error('Server returned error status');
+
+            scanData = await response.json();
+
+            resultsArea.style.display = 'block';
+
+            // 0. Update Summary
+            summaryEl.textContent = scanData.summary;
+
+            // 1. Update Meter
+            const score = scanData.final_risk.score;
+            const level = scanData.final_risk.level;
+            const bar = document.getElementById('riskBar');
+            const scoreEl = document.getElementById('riskScore');
+            const labelEl = document.getElementById('riskLabel');
+
+            bar.style.width = score + '%';
+            bar.className = 'risk-bar ' + (level === 'High' ? 'risk-high' : level === 'Medium' ? 'risk-medium' : 'risk-low');
+            scoreEl.textContent = score + '%';
+            labelEl.textContent = level.toUpperCase();
+            labelEl.className = 'risk-' + level.toLowerCase();
+
+            // Notify if legitimate (Low risk)
+            if (level === 'Low') {
+                showNotification('VERDICT: LEGITIMATE', 'This vector has been cleared by the neural inspection engine. No active threats detected.', 'success');
+            } else if (level === 'High') {
+                showNotification('ALERT: THREAT DETECTED', 'Critical vulnerabilities identified in the analyzed content. Proceed with maximum caution.', 'danger');
+            }
+
+            // 2. Update Indicators List
+            const indicatorsList = document.getElementById('indicatorsList');
+            if (scanData.keywords.detected_words.length > 0) {
+                const categories = {};
+                scanData.keywords.detected_words.forEach(w => {
+                    if (!categories[w.category]) categories[w.category] = [];
+                    if (!categories[w.category].includes(w.word.toLowerCase())) categories[w.category].push(w.word.toLowerCase());
+                });
+
+                indicatorsList.innerHTML = Object.keys(categories).map(cat => {
+                    const words = categories[cat];
+                    const sampleWord = scanData.keywords.detected_words.find(w => w.category === cat);
+                    const severity = sampleWord.severity;
+                    const borderCls = severity === 'Critical' || severity === 'High' ? '#ff4757' : '#ffcc00';
+
+                    return `
+                    <div class="indicator-row" style="border-left: 4px solid ${borderCls}; background: rgba(255,255,255,0.03); padding: 1rem; margin-bottom: 0.8rem; border-radius: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                            <span style="background: ${borderCls}; color: white; padding: 0.1rem 0.4rem; border-radius: 2px; font-size: 0.7rem; font-weight: 800;">${severity.toUpperCase()}</span>
+                            <strong style="color: white; font-size: 0.85rem;">${cat}</strong>
+                        </div>
+                        <div style="color: var(--text-dim); font-size: 0.8rem; line-height: 1.4;">
+                            <span style="color: var(--primary);">DETECTION:</span> ${words.join(', ')}<br>
+                            ${sampleWord.explanation}
+                        </div>
+                    </div>`;
+                }).join('');
+            } else {
+                indicatorsList.innerHTML = '<p style="color: var(--success); font-size: 0.8rem;"><i class="fas fa-check-circle"></i> No suspicious linguistic patterns detected.</p>';
+            }
+
+            // 3. Update Detailed Vectors
+            document.getElementById('linksList').innerHTML = scanData.links.count > 0 ?
+                scanData.links.links.map(l => `
+                    <div style="margin-bottom:0.5rem; padding:0.65rem; background:rgba(255,255,255,0.03); border-radius:4px; border-left: 2px solid ${l.score > 20 ? 'var(--danger)' : 'var(--success)'}">
+                        <div style="font-family:monospace; font-size:0.75rem; color: var(--text-main); word-break: break-all;">${l.url}</div>
+                        <div style="font-size:0.65rem; color:${l.score > 20 ? 'var(--danger)' : 'var(--success)'}; margin-top: 0.3rem;">RISK: ${l.warnings.join(', ') || 'CLEAN'}</div>
+                    </div>`).join('') : 'No URLs extracted from content.';
+
+            const attachStatus = document.getElementById('attachmentStatus');
+            attachStatus.innerHTML = scanData.attachment.filename ? `
+                <div style="background: rgba(255,255,255,0.03); padding: 0.8rem; border-radius: 4px; border-left: 2px solid ${scanData.attachment.score > 0 ? 'var(--danger)' : 'var(--success)'}">
+                    <div style="color: white; margin-bottom: 0.3rem; font-size: 0.85rem;">${scanData.attachment.filename}</div>
+                    <div style="font-size: 0.7rem; color: ${scanData.attachment.score > 0 ? 'var(--danger)' : 'var(--success)'}">
+                        ${scanData.attachment.warnings.join('<br>') || 'No suspicious artifacts found.'}
+                    </div>
+                </div>` : 'No binary vectors analyzed.';
+
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        } catch (err) {
+            console.error(err);
+            alert('Analysis failed. Check server connection.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-bolt"></i> INITIATE_SCAN';
+        }
+    };
+</script>
+{% endblock %}

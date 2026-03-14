@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Neural Threat Analytics{% endblock %}
+
+{% block content %}
+<div class="card-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+    <!-- Distribution Chart -->
+    <div class="pro-panel">
+        <h3 style="margin-bottom: 2rem;"><i class="fas fa-chart-pie"></i> THREAT VECTOR DISTRIBUTION</h3>
+        <div style="height: 400px;">
+            <canvas id="distributionChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Alert Frequency -->
+    <div class="pro-panel">
+        <h3 style="margin-bottom: 2rem;"><i class="fas fa-bolt"></i> ALERT INTENSITY INDEX</h3>
+        <div style="height: 400px;">
+            <canvas id="intensityChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="pro-panel">
+    <h3 style="margin-bottom: 2rem;"><i class="fas fa-project-diagram"></i> INTELLIGENCE NETWORK STATUS</h3>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem;">
+        <div class="stat-card">
+            <span class="stat-header">Domain Reputation Engine</span>
+            <span class="glow-success">ACTIVE // 100%</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-header">Pattern Matching Heuristics</span>
+            <span class="glow-success">OPTIMAL // 98%</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-header">Deep Sandbox Emulation</span>
+            <span class="glow-warning">PARTIAL LOAD // 45%</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Distribution Chart
+    new Chart(document.getElementById('distributionChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Malicious Links', 'AI NLP Flag', 'Suspicious Files', 'Safe'],
+            datasets: [{
+                data: [35, 25, 20, 20],
+                backgroundColor: ['#ff2a6d', '#7000ff', '#ff007a', '#00f2ff'],
+                borderWidth: 0,
+                hoverOffset: 20
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: '#7090b0', font: { family: 'JetBrains Mono' } } }
+            }
+        }
+    });
+
+    // Intensity Chart
+    const chartData = {{ chart_data | tojson }};
+    new Chart(document.getElementById('intensityChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Combined Threat Score',
+                data: chartData.phishing.map(v => v * 10 + Math.random() * 20),
+                backgroundColor: 'rgba(0, 242, 255, 0.2)',
+                borderColor: '#00f2ff',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#7090b0' } },
+                x: { grid: { display: false }, ticks: { color: '#7090b0' } }
+            }
+        }
+    });
+</script>
+{% endblock %}

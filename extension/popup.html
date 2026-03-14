@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishShield Extension</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="extension-container glass-panel">
+        <header class="header">
+            <div class="logo-box">
+                <span class="shield-icon">🛡️</span>
+                <span class="logo-text">PHISHSHIELD</span>
+            </div>
+            <p class="subtitle">AI Threat Intelligence Core</p>
+        </header>
+
+        <main class="content">
+            <div class="action-panel">
+                <button id="scan-page-btn" class="cyber-btn primary-btn">
+                    <span class="btn-text">SCAN PAGE CONTEXT</span>
+                    <div class="btn-glitch"></div>
+                </button>
+                
+                <div class="divider">
+                    <span>OR MANUAL INSPECTION</span>
+                </div>
+                
+                <textarea id="manual-text" class="cyber-input" placeholder="Paste URL or email content here..."></textarea>
+                
+                <button id="scan-manual-btn" class="cyber-btn secondary-btn">
+                    <span class="btn-text">ANALYZE TEXT</span>
+                </button>
+            </div>
+
+            <div id="loading" class="hidden state-panel">
+                <div class="cyber-spinner"></div>
+                <p>Establishing neural heuristic link...</p>
+                <div class="progress-bar"><div class="progress-fill"></div></div>
+            </div>
+
+            <div id="results" class="hidden state-panel results-panel">
+                <div class="risk-header" id="risk-banner">
+                    <h2 id="risk-display">SAFE</h2>
+                    <span id="risk-score">0 / 100</span>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <span class="metric-label">ML Vector</span>
+                        <span id="ml-pred" class="metric-value">...</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="metric-label">Keywords</span>
+                        <span id="kw-count" class="metric-value">0</span>
+                    </div>
+                    <div class="metric-box full-width">
+                        <span class="metric-label">Link Forensics</span>
+                        <span id="link-status" class="metric-value text-sm">0 links found</span>
+                    </div>
+                </div>
+
+                <div class="summary-box">
+                    <span class="summary-label">Tactical Summary</span>
+                    <p id="summary-text" class="summary-content">No active threats detected.</p>
+                </div>
+
+                <button id="back-btn" class="cyber-btn tertiary-btn">New Scan</button>
+            </div>
+
+            <div id="error" class="hidden state-panel error-panel">
+                <p id="error-text">API Connection Terminated.</p>
+                <button id="retry-btn" class="cyber-btn tertiary-btn">Retry</button>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <span>Powered by Model Core v2.1</span>
+            <span class="status-indicator"></span>
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
